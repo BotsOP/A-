@@ -16,6 +16,23 @@ public class Astar
     /// <returns></returns>
     private List<Node> checkedNodes = new List<Node>();
     private float lowestFScore = 1000;
+    
+    private Vector2Int[] directions = new []
+    {
+        new Vector2Int(0,1), //up
+        new Vector2Int(1,0), //right
+        new Vector2Int(0,-1),//down
+        new Vector2Int(-1,0) //left
+    };
+    
+    private Wall[] directionsWall = new []
+    {
+        Wall.UP,
+        Wall.RIGHT,
+        Wall.DOWN,
+        Wall.LEFT
+    };
+    
     public List<Vector2Int> FindPathToTarget(Vector2Int startPos, Vector2Int endPos, Cell[,] grid)
     {
         List<Vector2Int> path = new List<Vector2Int>();
@@ -33,25 +50,21 @@ public class Astar
         while (true)
         {
             currentNode = CheckClosestNode(currentNode, grid, startPos, endPos);
-
+            
+            //Gets the path from end to start when end has been reached
             if (currentNode.position == endPos)
             {
                 Debug.Log(currentNode.position + "    FOUND FINAL NODE");
-                int numberOperations2 = 0;
-                while (numberOperations2 < 100)
+                while (currentNode.position != startPos)
                 {
                     path.Add(currentNode.position);
                     
-                    if (currentNode.position == startPos)
-                    {
-                        break;
-                    }
-                    numberOperations2++;
                     currentNode = currentNode.parent;
                 }
                 break;
             }
             
+            //Incase it cant find the path
             if (numberOperations > 200)
             {
                 Debug.LogError("finding path took more then 200 operations");
@@ -66,115 +79,55 @@ public class Astar
 
     private Node CheckClosestNode(Node currentNode, Cell[,] grid, Vector2Int startPos, Vector2Int endPos)
     {
-        Vector2Int currentCellPos = new Vector2Int(currentNode.position.x, currentNode.position.y);
-        //Debug.Log(currentCellPos);
-
-        //make a for a loop and assign 0-3 to vectors
-        if (!grid[currentCellPos.x, currentCellPos.y].HasWall(Wall.LEFT))
+        for (int i = 0; i < 4; i++)
         {
-            Vector2Int left = new Vector2Int(currentCellPos.x - 1, currentCellPos.y);
-            bool stop = false;
-            foreach (var node in checkedNodes)
+            if (!grid[currentNode.position.x, currentNode.position.y].HasWall(directionsWall[i]))
             {
-                if (node.position == left && node.checkedNode)
+                Vector2Int currentDir = new Vector2Int(currentNode.position.x + directions[i].x, currentNode.position.y + directions[i].y);
+                bool stop = false;
+                foreach (var node in checkedNodes)
                 {
-                    //Debug.Log("stopped");
-                    stop = true;
+                    if (node.position == currentDir && node.checkedNode)
+                    {
+                        stop = true;
+                    }
                 }
-            }
-            if (!stop)
-            {
-                Node leftNode = new Node(left, currentNode, GetGScore(left, startPos), GetHScore(left, endPos));
-                checkedNodes.Add(leftNode);
+                if (!stop)
+                {
+                    Node node = new Node(currentDir, currentNode, GetGScore(currentDir, startPos), GetHScore(currentDir, endPos));
+                    checkedNodes.Add(node);
+                }
             }
         }
         
-        if (!grid[currentCellPos.x, currentCellPos.y].HasWall(Wall.RIGHT))
-        {
-            Vector2Int right = new Vector2Int(currentCellPos.x + 1, currentCellPos.y);
-            bool stop = false;
-            foreach (var node in checkedNodes)
-            {
-                if (node.position == right && node.checkedNode)
-                {
-                    //Debug.Log("stopped");
-                    stop = true;
-                }
-            }
-            if (!stop)
-            {
-                Node rightNode = new Node(right, currentNode, GetGScore(right, startPos), GetHScore(right, endPos));
-                checkedNodes.Add(rightNode);
-            }
-        }
-        
-        if (!grid[currentCellPos.x, currentCellPos.y].HasWall(Wall.UP))
-        {
-            Vector2Int up = new Vector2Int(currentCellPos.x, currentCellPos.y + 1);
-            bool stop = false;
-            foreach (var node in checkedNodes)
-            {
-                if (node.position == up && node.checkedNode)
-                {
-                    //Debug.Log("stopped");
-                    stop = true;
-                }
-            }
-            if (!stop)
-            {
-                Node upNode = new Node(up, currentNode, GetGScore(up, startPos), GetHScore(up, endPos));
-                checkedNodes.Add(upNode);
-            }
-        }
-
-        if (!grid[currentCellPos.x, currentCellPos.y].HasWall(Wall.DOWN))
-        {
-            Vector2Int down = new Vector2Int(currentCellPos.x, currentCellPos.y - 1);
-            bool stop = false;
-            foreach (var node in checkedNodes)
-            {
-                if (node.position == down && node.checkedNode)
-                {
-                    //Debug.Log("stopped");
-                    stop = true;
-                }
-            }
-            if (!stop)
-            {
-                Node downNode = new Node(down, currentNode, GetGScore(down, startPos), GetHScore(down, endPos));
-                checkedNodes.Add(downNode);
-            }
-        }
-        
-        
+        //check which node is closest
         foreach (var node in checkedNodes)
         {
             if (lowestFScore > node.FScore && !node.checkedNode)
             {
-                //Debug.Log(node.position + " lowest fscore");
                 lowestFScore = node.FScore;
             }
-            
         }
         
+        //return node with lowest FScore
         foreach (var node in checkedNodes)
         {
-            //Debug.Log(lowestFScore + "   " + node.FScore + "   " + node.checkedNode);
             if (lowestFScore == node.FScore && !node.checkedNode && node.position != currentNode.position)
             {
-                //Debug.Log(node.position + "   closest node");
+                Debug.Log(node.position + "   closest node");
                 node.checkedNode = true;
                 return node;
             }
         }
-
+        
+        //return node that hasnt been checked yet
         foreach (var node in checkedNodes)
         {
-            if (!node.checkedNode && node.position.x >= 0)
+            if (!node.checkedNode)
             {
                 lowestFScore = node.FScore;
                 node.checkedNode = true;
-                //Debug.Log(node.position);
+                Debug.Log(node.position);
                 
                 return node;
             }
