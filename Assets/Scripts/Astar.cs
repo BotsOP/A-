@@ -18,6 +18,7 @@ public class Astar
     private float lowestFScore = 1000;
     public List<Vector2Int> FindPathToTarget(Vector2Int startPos, Vector2Int endPos, Cell[,] grid)
     {
+        List<Vector2Int> path = new List<Vector2Int>();
         checkedNodes.Clear();
         lowestFScore = 1000;
 
@@ -36,6 +37,18 @@ public class Astar
             if (currentNode.position == endPos)
             {
                 Debug.Log(currentNode.position + "    FOUND FINAL NODE");
+                int numberOperations2 = 0;
+                while (numberOperations2 < 100)
+                {
+                    path.Add(currentNode.position);
+                    
+                    if (currentNode.position == startPos)
+                    {
+                        break;
+                    }
+                    numberOperations2++;
+                    currentNode = currentNode.parent;
+                }
                 break;
             }
             
@@ -46,8 +59,9 @@ public class Astar
             }
             numberOperations++;
         }
-
-        return null;
+        
+        path.Reverse();
+        return path;
     }
 
     private Node CheckClosestNode(Node currentNode, Cell[,] grid, Vector2Int startPos, Vector2Int endPos)
@@ -148,7 +162,7 @@ public class Astar
             //Debug.Log(lowestFScore + "   " + node.FScore + "   " + node.checkedNode);
             if (lowestFScore == node.FScore && !node.checkedNode && node.position != currentNode.position)
             {
-                Debug.Log(node.position + "   closest node");
+                //Debug.Log(node.position + "   closest node");
                 node.checkedNode = true;
                 return node;
             }
@@ -160,7 +174,7 @@ public class Astar
             {
                 lowestFScore = node.FScore;
                 node.checkedNode = true;
-                Debug.Log(node.position);
+                //Debug.Log(node.position);
                 
                 return node;
             }
