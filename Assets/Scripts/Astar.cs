@@ -99,8 +99,39 @@ public class Astar
                 }
             }
         }
-        
-        //check which node is closest
+
+        return lowestFScoreNode(currentNode);
+    }
+    
+    private Node lowestFScoreNode(Node currentNode)
+    {
+        int numberOfOperations = 0;
+
+        while (numberOfOperations < 20)
+        {
+            findLowestFScore();
+            
+            foreach (var node in checkedNodes)
+            {
+                if (lowestFScore == node.FScore && !node.checkedNode && node.position != currentNode.position)
+                {
+                    Debug.Log(node.position + "    FScore: " + node.FScore + "   closest node");
+                    node.checkedNode = true;
+                    return node;
+                }
+            }
+
+            lowestFScore = 1000;
+            
+            numberOfOperations++;
+        }
+
+        Debug.LogError("couldnt match a node with the lowestFScore");
+        return null;
+    }
+
+    private void findLowestFScore()
+    {
         foreach (var node in checkedNodes)
         {
             if (lowestFScore > node.FScore && !node.checkedNode)
@@ -108,33 +139,6 @@ public class Astar
                 lowestFScore = node.FScore;
             }
         }
-        
-        //return node with lowest FScore
-        foreach (var node in checkedNodes)
-        {
-            if (lowestFScore == node.FScore && !node.checkedNode && node.position != currentNode.position)
-            {
-                Debug.Log(node.position + "   closest node");
-                node.checkedNode = true;
-                return node;
-            }
-        }
-        
-        //return node that hasnt been checked yet
-        foreach (var node in checkedNodes)
-        {
-            if (!node.checkedNode)
-            {
-                lowestFScore = node.FScore;
-                node.checkedNode = true;
-                Debug.Log(node.position);
-                
-                return node;
-            }
-        }
-
-        Debug.LogError("couldnt match a node with the lowestFScore found earlier");
-        return null;
     }
     
     private int GetHScore(Vector2Int currentPos, Vector2Int endPos)
