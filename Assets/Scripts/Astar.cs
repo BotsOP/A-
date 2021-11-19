@@ -17,15 +17,59 @@ public class Astar
     private List<Node> checkedNodes = new List<Node>();
     private float lowestFScore = 1000;
     
+    // private Vector2Int[] directions = new []
+    // {
+    //     new Vector2Int(0,1), //up
+    //     new Vector2Int(1,0), //right
+    //     new Vector2Int(0,-1),//down
+    //     new Vector2Int(-1,0) //left
+    // };
+    //
+    // private Wall[] directionsWall = new []
+    // {
+    //     Wall.UP,
+    //     Wall.RIGHT,
+    //     Wall.DOWN,
+    //     Wall.LEFT
+    // };
+    
     private Vector2Int[] directions = new []
     {
-        new Vector2Int(0,1), //up
-        new Vector2Int(1,0), //right
-        new Vector2Int(0,-1),//down
-        new Vector2Int(-1,0) //left
+        new Vector2Int(0,1),  //up
+        new Vector2Int(1, 1), //top right
+        new Vector2Int(1,0),  //right
+        new Vector2Int(1, -1),//down right
+        new Vector2Int(0,-1), //down
+        new Vector2Int(-1,-1),//down left
+        new Vector2Int(-1,0), //left
+        new Vector2Int(-1,1)  //up left
     };
     
-    private Wall[] directionsWall = new []
+    private Vector2Int[] directionsWall = new []
+    {
+        new Vector2Int(0,0),
+        new Vector2Int(0,1),
+        new Vector2Int(1,1),
+        new Vector2Int(1,2),
+        new Vector2Int(2,2),
+        new Vector2Int(2,3),
+        new Vector2Int(3,3),
+        new Vector2Int(3,0)
+    };
+    
+    private Vector2Int[] directionsWallInverse = new []
+    {
+        new Vector2Int(2,2),
+        new Vector2Int(2,3),
+        new Vector2Int(3,3),
+        new Vector2Int(3,0),
+        new Vector2Int(0,0),
+        new Vector2Int(0,1),
+        new Vector2Int(1,1),
+        new Vector2Int(1,2)
+    };
+    
+    private Wall[] directionsWallEnum = new []
     {
         Wall.UP,
         Wall.RIGHT,
@@ -79,23 +123,32 @@ public class Astar
 
     private Node CheckClosestNode(Node currentNode, Cell[,] grid, Vector2Int startPos, Vector2Int endPos)
     {
-        for (int i = 0; i < 4; i++)
+        //to optimize further add diagonals
+        for (int i = 0; i < 8; i++)
         {
-            if (!grid[currentNode.position.x, currentNode.position.y].HasWall(directionsWall[i]))
+            Vector2Int wallDirection = directionsWall[i];
+            Vector2Int wallDirectionInverse = directionsWallInverse[i];
+            Vector2Int currentDir = new Vector2Int(currentNode.position.x + directions[i].x, currentNode.position.y + directions[i].y);
+            
+            if (currentDir.x >= 0 && currentDir.x < 10 && currentDir.y >= 0 && currentDir.y < 10)
             {
-                Vector2Int currentDir = new Vector2Int(currentNode.position.x + directions[i].x, currentNode.position.y + directions[i].y);
-                bool stop = false;
-                foreach (var node in checkedNodes)
+                if (!grid[currentNode.position.x, currentNode.position.y].HasWall(directionsWallEnum[wallDirection.x]) && !grid[currentNode.position.x, currentNode.position.y].HasWall(directionsWallEnum[wallDirection.y]) &&
+                    !grid[currentDir.x, currentDir.y].HasWall(directionsWallEnum[wallDirectionInverse.x]) && !grid[currentDir.x, currentDir.y].HasWall(directionsWallEnum[wallDirectionInverse.y])
+                )
                 {
-                    if (node.position == currentDir)
+                    bool stop = false;
+                    foreach (var node in checkedNodes)
                     {
-                        stop = true;
+                        if (node.position == currentDir)
+                        {
+                            stop = true;
+                        }
                     }
-                }
-                if (!stop)
-                {
-                    Node node = new Node(currentDir, currentNode, GetDistance(currentDir, startPos), GetDistance(currentDir, endPos));
-                    checkedNodes.Add(node);
+                    if (!stop)
+                    {
+                        Node node = new Node(currentDir, currentNode, GetDistance(currentDir, startPos), GetDistance(currentDir, endPos));
+                        checkedNodes.Add(node);
+                    }
                 }
             }
         }
@@ -141,9 +194,9 @@ public class Astar
         }
     }
     
-    private int GetDistance(Vector2Int currentPos, Vector2Int endPos)
+    private float GetDistance(Vector2Int currentPos, Vector2Int endPos)
     {
-        return Mathf.RoundToInt(Vector2Int.Distance(currentPos, endPos));
+        return Vector2Int.Distance(currentPos, endPos);
     }
 
     /// <summary>
@@ -162,7 +215,7 @@ public class Astar
         public float HScore; //Distance estimated based on Heuristic
 
         public Node() { }
-        public Node(Vector2Int position, Node parent, int GScore, int HScore)
+        public Node(Vector2Int position, Node parent, float GScore, float HScore)
         {
             this.position = position;
             this.parent = parent;
