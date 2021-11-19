@@ -39,7 +39,7 @@ public class Astar
         checkedNodes.Clear();
         lowestFScore = 1000;
 
-        Node currentNode = new Node(startPos, null, 0, GetHScore(startPos, endPos));
+        Node currentNode = new Node(startPos, null, 0, GetDistance(startPos, endPos));
         if (startPos != endPos)
         {
             currentNode.checkedNode = true;
@@ -65,9 +65,9 @@ public class Astar
             }
             
             //Incase it cant find the path
-            if (numberOperations > 200)
+            if (numberOperations > 700)
             {
-                Debug.LogError("finding path took more then 200 operations");
+                Debug.LogError("finding path took more then 700 operations");
                 break;
             }
             numberOperations++;
@@ -87,35 +87,35 @@ public class Astar
                 bool stop = false;
                 foreach (var node in checkedNodes)
                 {
-                    if (node.position == currentDir && node.checkedNode)
+                    if (node.position == currentDir)
                     {
                         stop = true;
                     }
                 }
                 if (!stop)
                 {
-                    Node node = new Node(currentDir, currentNode, GetGScore(currentDir, startPos), GetHScore(currentDir, endPos));
+                    Node node = new Node(currentDir, currentNode, GetDistance(currentDir, startPos), GetDistance(currentDir, endPos));
                     checkedNodes.Add(node);
                 }
             }
         }
 
-        return lowestFScoreNode(currentNode);
+        return lowestFScoreNode();
     }
     
-    private Node lowestFScoreNode(Node currentNode)
+    private Node lowestFScoreNode()
     {
         int numberOfOperations = 0;
 
-        while (numberOfOperations < 20)
+        while (numberOfOperations < 50)
         {
             findLowestFScore();
             
             foreach (var node in checkedNodes)
             {
-                if (lowestFScore == node.FScore && !node.checkedNode && node.position != currentNode.position)
+                if (lowestFScore >= node.FScore && !node.checkedNode)
                 {
-                    Debug.Log(node.position + "    FScore: " + node.FScore + "   closest node");
+                    Debug.Log(node.position + "    FScore: " + node.FScore + "   closest node    " + node.checkedNode + "     " + checkedNodes.Count);
                     node.checkedNode = true;
                     return node;
                 }
@@ -141,18 +141,9 @@ public class Astar
         }
     }
     
-    private int GetHScore(Vector2Int currentPos, Vector2Int endPos)
+    private int GetDistance(Vector2Int currentPos, Vector2Int endPos)
     {
-        int x = Mathf.Abs(currentPos.x - endPos.x);
-        int y = Mathf.Abs(currentPos.y - endPos.y);
-        return x + y;
-    }
-
-    private int GetGScore(Vector2Int currentPos, Vector2Int startPos)
-    {
-        int x = Mathf.Abs(currentPos.x - startPos.x);
-        int y = Mathf.Abs(currentPos.y - startPos.y);
-        return x + y;
+        return Mathf.RoundToInt(Vector2Int.Distance(currentPos, endPos));
     }
 
     /// <summary>
